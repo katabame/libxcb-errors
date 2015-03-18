@@ -26,20 +26,20 @@
 #include "xcb_errors.h"
 #include "errors.h"
 
-const char *unknown_major_code[256] = {
-#define ENTRY(i) "Unknown major code " #i,
+const char unknown_major_code[] = {
+#define ENTRY(i) "Unknown major code " #i "\0"
 #include "static_tables.inc"
 #undef ENTRY
 };
 
-const char *unknown_error_code[256] = {
-#define ENTRY(i) "Unknown error " #i,
+const char unknown_error_code[] = {
+#define ENTRY(i) "Unknown error " #i "\0"
 #include "static_tables.inc"
 #undef ENTRY
 };
 
-const char *unknown_event_code[256] = {
-#define ENTRY(i) "Unknown event " #i,
+const char unknown_event_code[] = {
+#define ENTRY(i) "Unknown event " #i "\0"
 #include "static_tables.inc"
 #undef ENTRY
 };

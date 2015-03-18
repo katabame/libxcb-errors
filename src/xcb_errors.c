@@ -152,7 +152,7 @@ const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
 		info = info->next;
 
 	if (info == NULL)
-		return unknown_major_code[major_code];
+		return get_strings_entry(unknown_major_code, major_code);
 
 	return info->name;
 }
@@ -184,7 +184,7 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		info = info->next;
 
 	if (info == NULL)
-		return unknown_event_code[event_code];
+		return get_strings_entry(unknown_event_code, event_code);
 
 	return get_strings_entry(info->static_info.strings_events, event_code - info->first_event);
 }
@@ -201,7 +201,7 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		info = info->next;
 
 	if (info == NULL)
-		return unknown_error_code[error_code];
+		return get_strings_entry(unknown_error_code, error_code);
 
 	return get_strings_entry(info->static_info.strings_errors, error_code - info->first_error);
 }

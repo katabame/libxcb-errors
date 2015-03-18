@@ -35,9 +35,9 @@ struct static_extension_info_t {
 	const char *strings_errors;
 };
 
-extern const char *unknown_major_code[256];
-extern const char *unknown_error_code[256];
-extern const char *unknown_event_code[256];
+extern const char unknown_major_code[];
+extern const char unknown_error_code[];
+extern const char unknown_event_code[];
 
 const char *xproto_get_name_for_major_code(uint8_t major_code);
 const char *xproto_get_name_for_event(uint8_t event_code);
