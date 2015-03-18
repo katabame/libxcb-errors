@@ -112,6 +112,7 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 		xcb_str_next(&iter);
 	}
 
+	free(reply);
 	return 0;
 
 error_out:
