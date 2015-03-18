@@ -102,6 +102,8 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 	if (!reply)
 		goto error_out;
 
+	// TODO: Make this do all the query_extension requests first and then
+	// collect the results. Less roundtrips.
 	iter = xcb_list_extensions_names_iterator(reply);
 	while (iter.rem > 0) {
 		int status = register_extension(ctx, conn, xcb_str_name(iter.data));
