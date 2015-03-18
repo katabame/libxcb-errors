@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define IS_IN_RANGE(value, begin, length) ((value) >= (begin) && (value) < (begin) + (length))
+
 struct extension_info_t {
 	struct extension_info_t *next;
 	struct static_extension_info_t static_info;
@@ -177,8 +179,7 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 	if (result)
 		return result;
 
-	while (info && (info->first_event > event_code
-				|| info->first_event + info->static_info.num_events <= event_code))
+	while (info && !IS_IN_RANGE(event_code, info->first_event, info->static_info.num_events))
 		info = info->next;
 
 	if (info == NULL)
@@ -195,8 +196,7 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 	if (result)
 		return result;
 
-	while (info && (info->first_error > error_code
-				|| info->first_error + info->static_info.num_errors <= error_code))
+	while (info && !IS_IN_RANGE(error_code, info->first_error, info->static_info.num_errors))
 		info = info->next;
 
 	if (info == NULL)
