@@ -26,6 +26,8 @@
  * authorization from the authors.
  */
 
+#include "xcb_errors.h"
+
 struct static_extension_info_t {
 	uint16_t num_minor;
 	uint8_t num_events;

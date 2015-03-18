@@ -23,7 +23,6 @@
  * authorization from the authors.
  */
 
-#include "xcb_errors.h"
 #include "errors.h"
 
 const char unknown_major_code[] = {
