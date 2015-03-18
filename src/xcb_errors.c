@@ -40,7 +40,6 @@ struct extension_info_t {
 };
 
 struct xcb_errors_context_t {
-	xcb_connection_t *conn;
 	struct extension_info_t *extensions;
 };
 
@@ -50,7 +49,7 @@ static const char *get_strings_entry(const char *strings, unsigned int index) {
 	return strings;
 }
 
-static int register_extension(xcb_errors_context_t *ctx, const char *ext)
+static int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn, const char *ext)
 {
 	struct extension_info_t *info;
 	struct static_extension_info_t static_info;
@@ -59,8 +58,8 @@ static int register_extension(xcb_errors_context_t *ctx, const char *ext)
 
 	ext_dup = strdup(ext);
 	info = calloc(1, sizeof(*info));
-	reply = xcb_query_extension_reply(ctx->conn,
-			xcb_query_extension(ctx->conn, strlen(ext), ext), NULL);
+	reply = xcb_query_extension_reply(conn,
+			xcb_query_extension(conn, strlen(ext), ext), NULL);
 	static_info = find_static_info_for_extension(ext);
 
 	if (!info || !reply || !ext_dup || !reply->present || (static_info.num_minor == 0)) {
@@ -96,7 +95,6 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 		goto error_out;
 
 	ctx = *c;
-	ctx->conn = conn;
 	ctx->extensions = NULL;
 
 	reply = xcb_list_extensions_reply(conn,
@@ -106,7 +104,7 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 
 	iter = xcb_list_extensions_names_iterator(reply);
 	while (iter.rem > 0) {
-		int status = register_extension(ctx, xcb_str_name(iter.data));
+		int status = register_extension(ctx, conn, xcb_str_name(iter.data));
 		if (status < 0)
 			goto error_out;
 		xcb_str_next(&iter);
