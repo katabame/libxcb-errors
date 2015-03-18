@@ -163,7 +163,7 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 	while (info && info->major_opcode != major_code)
 		info = info->next;
 
-	if (info == NULL || minor_code > info->static_info.num_minor)
+	if (info == NULL || minor_code >= info->static_info.num_minor)
 		return NULL;
 
 	return get_strings_entry(info->static_info.strings_minor, minor_code);
