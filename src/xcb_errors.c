@@ -36,7 +36,7 @@ struct extension_info_t {
 	uint8_t major_opcode;
 	uint8_t first_event;
 	uint8_t first_error;
-	char *name;
+	const char *name;
 };
 
 struct xcb_errors_context_t {
@@ -49,30 +49,26 @@ static const char *get_strings_entry(const char *strings, unsigned int index) {
 	return strings;
 }
 
-static int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn, const char *ext)
+int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
+		xcb_query_extension_cookie_t cookie, const char *name,
+		const struct static_extension_info_t static_info)
 {
 	struct extension_info_t *info;
-	struct static_extension_info_t static_info;
 	xcb_query_extension_reply_t *reply;
-	char *ext_dup;
 
-	ext_dup = strdup(ext);
 	info = calloc(1, sizeof(*info));
-	reply = xcb_query_extension_reply(conn,
-			xcb_query_extension(conn, strlen(ext), ext), NULL);
-	static_info = find_static_info_for_extension(ext);
+	reply = xcb_query_extension_reply(conn, cookie, NULL);
 
-	if (!info || !reply || !ext_dup || !reply->present || (static_info.num_minor == 0)) {
+	if (!info || !reply || !reply->present) {
+		int had_error = !reply || reply->present;
 		free(info);
 		free(reply);
-		free(ext_dup);
-		/* This is used to indicate an unsupported extension */
-		if (static_info.num_minor == 0)
-			return 0;
-		return -1;
+		if (had_error)
+			return -1;
+		return 0;
 	}
 
-	info->name = ext_dup;
+	info->name = name;
 	info->static_info = static_info;
 	info->major_opcode = reply->major_opcode;
 	info->first_event = reply->first_event;
@@ -88,8 +84,6 @@ static int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
 int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 {
 	xcb_errors_context_t *ctx = NULL;
-	xcb_list_extensions_reply_t *reply = NULL;
-	xcb_str_iterator_t iter;
 
 	if ((*c = calloc(1, sizeof(*c))) == NULL)
 		goto error_out;
@@ -97,26 +91,12 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 	ctx = *c;
 	ctx->extensions = NULL;
 
-	reply = xcb_list_extensions_reply(conn,
-			xcb_list_extensions(conn), NULL);
-	if (!reply)
+	if (!register_extensions(ctx, conn))
 		goto error_out;
 
-	// TODO: Make this do all the query_extension requests first and then
-	// collect the results. Less roundtrips.
-	iter = xcb_list_extensions_names_iterator(reply);
-	while (iter.rem > 0) {
-		int status = register_extension(ctx, conn, xcb_str_name(iter.data));
-		if (status < 0)
-			goto error_out;
-		xcb_str_next(&iter);
-	}
-
-	free(reply);
 	return 0;
 
 error_out:
-	free(reply);
 	xcb_errors_context_free(ctx);
 	*c = NULL;
 	return -1;
@@ -133,7 +113,6 @@ void xcb_errors_context_free(xcb_errors_context_t *ctx)
 	while (info) {
 		struct extension_info_t *prev = info;
 		info = info->next;
-		free(prev->name);
 		free(prev);
 	}
 
@@ -144,15 +123,12 @@ const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
 		uint8_t major_code)
 {
 	struct extension_info_t *info = ctx->extensions;
-	const char *result = xproto_get_name_for_major_code(major_code);
-	if (result)
-		return result;
 
 	while (info && info->major_opcode != major_code)
 		info = info->next;
 
 	if (info == NULL)
-		return get_strings_entry(unknown_major_code, major_code);
+		return get_strings_entry(xproto_info.strings_minor, major_code);
 
 	return info->name;
 }
@@ -176,15 +152,12 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		uint8_t event_code)
 {
 	struct extension_info_t *info = ctx->extensions;
-	const char *result = xproto_get_name_for_event(event_code);
-	if (result)
-		return result;
 
 	while (info && !IS_IN_RANGE(event_code, info->first_event, info->static_info.num_events))
 		info = info->next;
 
 	if (info == NULL)
-		return get_strings_entry(unknown_event_code, event_code);
+		return get_strings_entry(xproto_info.strings_events, event_code);
 
 	return get_strings_entry(info->static_info.strings_events, event_code - info->first_event);
 }
@@ -193,15 +166,12 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		uint8_t error_code)
 {
 	struct extension_info_t *info = ctx->extensions;
-	const char *result = xproto_get_name_for_error(error_code);
-	if (result)
-		return result;
 
 	while (info && !IS_IN_RANGE(error_code, info->first_error, info->static_info.num_errors))
 		info = info->next;
 
 	if (info == NULL)
-		return get_strings_entry(unknown_error_code, error_code);
+		return get_strings_entry(xproto_info.strings_errors, error_code);
 
 	return get_strings_entry(info->static_info.strings_errors, error_code - info->first_error);
 }

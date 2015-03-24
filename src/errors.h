@@ -30,20 +30,18 @@
 
 struct static_extension_info_t {
 	uint16_t num_minor;
-	uint8_t num_events;
-	uint8_t num_errors;
+	uint16_t num_events;
+	uint16_t num_errors;
 	const char *strings_minor;
 	const char *strings_events;
 	const char *strings_errors;
 };
 
-extern const char unknown_major_code[];
-extern const char unknown_error_code[];
-extern const char unknown_event_code[];
+extern const struct static_extension_info_t xproto_info;
 
-const char *xproto_get_name_for_major_code(uint8_t major_code);
-const char *xproto_get_name_for_event(uint8_t event_code);
-const char *xproto_get_name_for_error(uint8_t error_code);
-struct static_extension_info_t find_static_info_for_extension(const char *name);
+int register_extensions(xcb_errors_context_t *ctx, xcb_connection_t *conn);
+int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
+		xcb_query_extension_cookie_t cookie, const char *name,
+		const struct static_extension_info_t static_info);
 
 #endif /* __ERRORS_H__ */
