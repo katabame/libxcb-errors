@@ -91,7 +91,7 @@ int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **c)
 	ctx = *c;
 	ctx->extensions = NULL;
 
-	if (!register_extensions(ctx, conn))
+	if (register_extensions(ctx, conn) != 0)
 		goto error_out;
 
 	return 0;
