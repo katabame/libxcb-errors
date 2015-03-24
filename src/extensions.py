@@ -80,7 +80,12 @@ def format_strings(name, table):
         output.write("\t.num_%s = 0,\n" % name)
         output.write("\t.strings_%s = NULL,\n" % name)
     else:
-        output.write("\t.num_%s = %d,\n" % (name, len(table)))
+        if len(table) == 256:
+            # This must be xproto and the value isn't used, so instead use
+            # something that fits into uint8_t.
+            output.write("\t.num_%s = 0,\n" % (name))
+        else:
+            output.write("\t.num_%s = %d,\n" % (name, len(table)))
         output.write("\t.strings_%s = \"%s\\0\",\n" % (name, "\\0".join(table)))
 
 def emit_module(module):
