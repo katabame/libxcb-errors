@@ -71,6 +71,7 @@ for input_file in sys.argv[2:]:
 assert xproto != None
 
 output = open(output_file, "w")
+output.write("/* Auto-generated file, do not edit */\n")
 output.write("#include \"errors.h\"\n")
 output.write("#include <string.h>\n")
 output.write("\n")
