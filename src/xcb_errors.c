@@ -44,7 +44,7 @@ struct xcb_errors_context_t {
 };
 
 static const char *get_strings_entry(const char *strings, unsigned int index) {
-	while (index > 0)
+	while (index-- > 0)
 		strings += strlen(strings) + 1;
 	return strings;
 }
