@@ -20,10 +20,10 @@ class Module(object):
 
         for elt in list(root):
             tag = elt.tag
-            if tag == "error" or tag == "event":
+            if tag == "error" or tag == "errorcopy" or tag == "event" or tag == "eventcopy":
                 name = elt.get("name")
                 number = int(elt.get("number"))
-                if tag == "error":
+                if tag == "error" or tag == "errorcopy":
                     self.errors[number] = name
                 else:
                     self.events[number] = name
