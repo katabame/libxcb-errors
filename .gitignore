@@ -1,2 +1,3 @@
 src/libxcb_errors.so
 src/extensions.c
+tests/test
