@@ -153,7 +153,8 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 {
 	struct extension_info_t *info = ctx->extensions;
 
-	while (info && !IS_IN_RANGE(event_code, info->first_event, info->static_info.num_events))
+	while (info && (info->first_event == 0
+			|| !IS_IN_RANGE(event_code, info->first_event, info->static_info.num_events)))
 		info = info->next;
 
 	if (info == NULL)
@@ -167,7 +168,8 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 {
 	struct extension_info_t *info = ctx->extensions;
 
-	while (info && !IS_IN_RANGE(error_code, info->first_error, info->static_info.num_errors))
+	while (info && (info->first_error == 0
+			|| !IS_IN_RANGE(error_code, info->first_error, info->static_info.num_errors)))
 		info = info->next;
 
 	if (info == NULL)
