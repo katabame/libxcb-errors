@@ -35,6 +35,9 @@ class Module(object):
         self.errors_table = self.handle_type("error", self.errors)
         self.requests_table = self.handle_type("request", self.requests)
         self.events_table = self.handle_type("event", self.events)
+        if self.name == "xkb":
+            # FIXME: This should be fixed in the xml instead
+            self.events_table = [ "XKB base event" ]
 
     def handle_type(self, kind, entries):
         # Do we have any entries at all?
