@@ -122,7 +122,7 @@ static int test_valid_connection(void)
 	return err;
 }
 
-int main()
+int main(void)
 {
 	int err = 0;
 	err |= test_error_connection();
