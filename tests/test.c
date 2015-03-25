@@ -145,6 +145,9 @@ static int test_valid_connection(void)
 	err |= check_request(ctx, XCB_CREATE_WINDOW, "CreateWindow");
 	err |= check_request(ctx, XCB_NO_OPERATION, "NoOperation");
 	err |= check_request(ctx, 126, "Unknown (126)");
+	err |= check_minor(ctx, XCB_CREATE_WINDOW, 0, NULL);
+	err |= check_minor(ctx, XCB_CREATE_WINDOW, 42, NULL);
+	err |= check_minor(ctx, XCB_CREATE_WINDOW, 0xffff, NULL);
 
 	err |= check_error(ctx, XCB_REQUEST, "Request");
 	err |= check_error(ctx, XCB_IMPLEMENTATION, "Implementation");
