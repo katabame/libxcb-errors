@@ -25,6 +25,7 @@
 
 #include "xcb_errors.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int check_request(xcb_errors_context_t *ctx, uint8_t opcode, const char *expected)
@@ -60,6 +61,17 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event, const char *exp
 	return 0;
 }
 
+static int check_minor(xcb_errors_context_t *ctx, uint8_t major, uint16_t minor, const char *expected)
+{
+	const char *actual = xcb_errors_get_name_for_minor_code(ctx, major, minor);
+	if (actual != expected && strcmp(actual, expected) != 0) {
+		fprintf(stderr, "For minor (%d, %d): Expected %s, got %s\n",
+				major, minor, expected, actual);
+		return 1;
+	}
+	return 0;
+}
+
 static int test_error_connection(void)
 {
 	xcb_errors_context_t *ctx;
@@ -80,6 +92,35 @@ static int test_error_connection(void)
 	xcb_errors_context_free(ctx);
 	xcb_disconnect(c);
 
+	return err;
+}
+
+static int test_randr(xcb_connection_t *c, xcb_errors_context_t *ctx)
+{
+	struct xcb_query_extension_reply_t *reply;
+	int err = 0;
+
+	reply = xcb_query_extension_reply(c,
+			xcb_query_extension(c, strlen("RANDR"), "RANDR"), NULL);
+	if (!reply || !reply->present) {
+		fprintf(stderr, "RANDR not supported by display\n");
+		free(reply);
+		return 1;
+	}
+
+	err |= check_request(ctx, reply->major_opcode, "RandR");
+	err |= check_error(ctx, reply->first_error + 0, "BadOutput");
+	err |= check_error(ctx, reply->first_error + 3, "BadProvider");
+	err |= check_event(ctx, reply->first_event + 0, "ScreenChangeNotify");
+	err |= check_event(ctx, reply->first_event + 1, "Notify");
+	err |= check_minor(ctx, reply->major_opcode, 0, "QueryVersion");
+	err |= check_minor(ctx, reply->major_opcode, 1, "Unknown (1)");
+	err |= check_minor(ctx, reply->major_opcode, 33, "GetProviderInfo");
+	err |= check_minor(ctx, reply->major_opcode, 41, "GetProviderProperty");
+	err |= check_minor(ctx, reply->major_opcode, 1337, NULL);
+	err |= check_minor(ctx, reply->major_opcode, 0xffff, NULL);
+
+	free(reply);
 	return err;
 }
 
@@ -115,7 +156,7 @@ static int test_valid_connection(void)
 	err |= check_event(ctx, XCB_GE_GENERIC, "GeGeneric");
 	err |= check_event(ctx, 36, "Unknown (36)");
 
-	/* TODO: Check some extension major codes, minor codes, errors and events */
+	err |= test_randr(c, ctx);
 
 	xcb_errors_context_free(ctx);
 	xcb_disconnect(c);
