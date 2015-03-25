@@ -26,6 +26,8 @@ class Module(object):
                 if tag == "error" or tag == "errorcopy":
                     self.errors[number] = name
                 else:
+                    if elt.get("xge") == "true":
+                        print("%s: XGE event %s not handled correctly" % (self.name, name))
                     self.events[number] = name
             elif tag == "request":
                 name = elt.get("name")
