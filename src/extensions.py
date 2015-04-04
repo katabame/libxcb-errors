@@ -7,6 +7,7 @@ class Module(object):
         self.errors = {}
         self.requests = {}
         self.events = {}
+        self.xge_events = {}
 
         root = parse(filename).getroot()
         if root.get("header") == "xproto":
@@ -26,20 +27,32 @@ class Module(object):
                 if tag == "error" or tag == "errorcopy":
                     self.errors[number] = name
                 else:
-                    if elt.get("xge") == "true":
-                        print("%s: XGE event %s not handled correctly" % (self.name, name))
-                    self.events[number] = name
+                    is_xge = elt.get("xge") == "true"
+                    if tag == "eventcopy" and elt.get("ref") in self.xge_events.values():
+                        is_xge = True
+                    if is_xge:
+                        self.xge_events[number] = name
+                    else:
+                        self.events[number] = name
             elif tag == "request":
                 name = elt.get("name")
                 opcode = int(elt.get("opcode"))
                 self.requests[opcode] = name
 
+        # Special case for XKB: It does its own event multiplexing, but this
+        # library internally pretends it uses XGE.
+        if self.name == "xkb":
+            self.xge_events = self.events
+            self.events = { 0: "XKB base event" }
+
+        if not self.is_ext:
+            self.events[35] = "GeGeneric"
+            self.xge_events = {}
+
         self.errors_table = self.handle_type("error", self.errors)
         self.requests_table = self.handle_type("request", self.requests)
         self.events_table = self.handle_type("event", self.events)
-        if self.name == "xkb":
-            # FIXME: This should be fixed in the xml instead
-            self.events_table = [ "XKB base event" ]
+        self.xge_events_table = self.handle_type("xge event", self.xge_events)
 
     def handle_type(self, kind, entries):
         # Do we have any entries at all?
@@ -104,6 +117,7 @@ def emit_module(module):
     output.write("%sconst struct static_extension_info_t %s%s_info = { // %s\n" % (t, prefix, module.name, module.xname))
     format_strings("minor", module.requests_table)
     format_strings("events", module.events_table)
+    format_strings("xge_events", module.xge_events_table)
     format_strings("errors", module.errors_table)
     output.write("\t.name = \"%s\",\n" % module.name)
     output.write("};\n\n")

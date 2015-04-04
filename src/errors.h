@@ -30,9 +30,11 @@
 
 struct static_extension_info_t {
 	uint16_t num_minor;
+	uint16_t num_xge_events;
 	uint8_t num_events;
 	uint8_t num_errors;
 	const char *strings_minor;
+	const char *strings_xge_events;
 	const char *strings_events;
 	const char *strings_errors;
 	const char *name;
