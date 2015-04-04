@@ -24,94 +24,91 @@
  */
 
 #include "xcb_errors.h"
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define SKIP 77
 
+static int check_strings(const char *expected, const char *actual, const char *format, ...)
+{
+	va_list ap;
+
+	if (expected == NULL && actual == NULL)
+		return 0;
+	if (expected != NULL && actual != NULL && strcmp(expected, actual) == 0)
+		return 0;
+
+	va_start(ap, format);
+	vfprintf(stderr, format, ap);
+	va_end(ap);
+	return 1;
+}
+
 static int check_request(xcb_errors_context_t *ctx, uint8_t opcode, const char *expected)
 {
 	const char *actual = xcb_errors_get_name_for_major_code(ctx, opcode);
-	if (strcmp(actual, expected) != 0) {
-		fprintf(stderr, "For opcode %d: Expected %s, got %s\n", opcode,
-				expected, actual);
-		return 1;
-	}
-	return 0;
+	return check_strings(expected, actual, "For opcode %d: Expected %s, got %s\n",
+			opcode, expected, actual);
 }
 
 static int check_error(xcb_errors_context_t *ctx, uint8_t error,
 		const char *expected, const char *expected_extension)
 {
 	const char *actual, *actual_extension, *tmp;
+	int ret = 0;
+
 	actual = xcb_errors_get_name_for_error(ctx, error, &actual_extension);
-	if (actual_extension != expected_extension &&
-			strcmp(actual_extension, expected_extension) != 0) {
-		fprintf(stderr, "For error %d: Expected ext %s, got %s\n", error,
-				expected_extension, actual_extension);
-		return 1;
-	}
-	if (strcmp(actual, expected) != 0) {
-		fprintf(stderr, "For error %d: Expected %s, got %s\n", error,
-				expected, actual);
-		return 1;
-	}
+	ret |= check_strings(expected_extension, actual_extension,
+			"For error %d: Expected ext %s, got %s\n",
+			error, expected_extension, actual_extension);
+	ret |= check_strings(expected, actual,
+			"For error %d: Expected %s, got %s\n",
+			error, expected, actual);
+
 	tmp = xcb_errors_get_name_for_error(ctx, error, NULL);
-	if (tmp != actual) {
-		fprintf(stderr, "For error %d: Passing NULL made a difference: %s vs %s\n",
-				error, actual, tmp);
-		return 1;
-	}
-	return 0;
+	ret |= check_strings(actual, tmp,
+			"For error %d: Passing NULL made a difference: %s vs %s\n",
+			error, actual, tmp);
+	return ret;
 }
 
 static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 		const char *expected, const char *expected_extension)
 {
 	const char *actual, *actual_extension, *tmp;
+	int ret = 0;
+
 	actual = xcb_errors_get_name_for_event(ctx, event, &actual_extension);
-	if (actual_extension != expected_extension &&
-			strcmp(actual_extension, expected_extension) != 0) {
-		fprintf(stderr, "For event %d: Expected ext %s, got %s\n", event,
-				expected_extension, actual_extension);
-		return 1;
-	}
-	if (strcmp(actual, expected) != 0) {
-		fprintf(stderr, "For event %d: Expected %s, got %s\n", event,
-				expected, actual);
-		return 1;
-	}
+	ret |= check_strings(expected_extension, actual_extension,
+			"For event %d: Expected ext %s, got %s\n",
+			event, expected_extension, actual_extension);
+	ret |= check_strings(expected, actual,
+			"For event %d: Expected %s, got %s\n",
+			event, expected, actual);
+
 	tmp = xcb_errors_get_name_for_event(ctx, event, NULL);
-	if (tmp != actual) {
-		fprintf(stderr, "For event %d: Passing NULL made a difference: %s vs %s\n",
-				event, actual, tmp);
-		return 1;
-	}
-	return 0;
+	ret |= check_strings(actual, tmp,
+			"For event %d: Passing NULL made a difference: %s vs %s\n",
+			event, actual, tmp);
+	return ret;
 }
 
 static int check_xge_event(xcb_errors_context_t *ctx, uint8_t major_code,
 		uint16_t event_type, const char *expected)
 {
 	const char *actual = xcb_errors_get_name_for_xge_event(ctx, major_code, event_type);
-	if (actual != expected && (actual == NULL || expected == NULL || strcmp(actual, expected) != 0)) {
-		fprintf(stderr, "For xge event (%d, %d): Expected %s, got %s\n",
-				major_code, event_type, expected, actual);
-		return 1;
-	}
-	return 0;
+	return check_strings(expected, actual,
+			"For xge event (%d, %d): Expected %s, got %s\n",
+			major_code, event_type, expected, actual);
 }
 
 static int check_minor(xcb_errors_context_t *ctx, uint8_t major, uint16_t minor, const char *expected)
 {
 	const char *actual = xcb_errors_get_name_for_minor_code(ctx, major, minor);
-	if (actual != expected && (actual == NULL || expected == NULL || strcmp(actual, expected) != 0)) {
-		fprintf(stderr, "For minor (%d, %d): Expected %s, got %s\n",
-				major, minor, expected, actual);
-		return 1;
-	}
-	return 0;
+	return check_strings(expected, actual, "For minor (%d, %d): Expected %s, got %s\n",
+			major, minor, expected, actual);
 }
 
 static int test_error_connection(void)
