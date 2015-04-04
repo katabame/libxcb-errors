@@ -58,12 +58,12 @@ int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
 	reply = xcb_query_extension_reply(conn, cookie, NULL);
 
 	if (!info || !reply || !reply->present) {
-		int had_error = !reply || reply->present;
+		int not_present = reply && !reply->present;
 		free(info);
 		free(reply);
-		if (had_error)
-			return -1;
-		return 0;
+		if (not_present)
+			return 0;
+		return -1;
 	}
 
 	info->name = name;
