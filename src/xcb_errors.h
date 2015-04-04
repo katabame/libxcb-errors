@@ -49,7 +49,8 @@ typedef struct xcb_errors_context_t xcb_errors_context_t;
  * with @ref xcb_errors_context_free ().
  * @param ctx A pointer to an xcb_cursor_context_t* which will be modified to
  * refer to the newly created context.
- * @return 0 on success, some other value otherwise.
+ * @return 0 on success, -1 otherwise. This function may fail due to memory
+ * allocation failures or if the connection ends up in an error state.
  */
 int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **ctx);
 
