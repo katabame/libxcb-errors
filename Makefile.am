@@ -30,8 +30,8 @@ pkgconfig_DATA = xcb-errors.pc
 TESTS = tests/test
 check_PROGRAMS = tests/test
 tests_test_SOURCE = tests/test.c
-tests_test_CPPFLAGS = -Isrc/
-tests_test_LDADD = libxcb-errors.la
+tests_test_CPPFLAGS = -I$(srcdir)/src/ $(XCB_CFLAGS)
+tests_test_LDADD = libxcb-errors.la $(XCB_LIBS)
 
 CLEANFILES = src/extensions.c
 
