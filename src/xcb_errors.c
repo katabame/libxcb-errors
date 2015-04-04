@@ -147,7 +147,7 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 }
 
 const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
-		uint8_t event_code)
+		uint8_t event_code, const char **extension)
 {
 	struct extension_info_t *best = NULL;
 	struct extension_info_t *next = ctx->extensions;
@@ -167,15 +167,20 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		best = current;
 	}
 
-	if (best == NULL || best->first_event == 0)
+	if (best == NULL || best->first_event == 0) {
 		/* Nothing found */
+		if (extension)
+			*extension = NULL;
 		return get_strings_entry(xproto_info.strings_events, event_code);
+	}
 
+	if (extension)
+		*extension = best->name;
 	return get_strings_entry(best->static_info.strings_events, event_code - best->first_event);
 }
 
 const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
-		uint8_t error_code)
+		uint8_t error_code, const char **extension)
 {
 	struct extension_info_t *best = NULL;
 	struct extension_info_t *next = ctx->extensions;
@@ -195,9 +200,14 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		best = current;
 	}
 
-	if (best == NULL || best->first_error == 0)
+	if (best == NULL || best->first_error == 0) {
 		/* Nothing found */
+		if (extension)
+			*extension = NULL;
 		return get_strings_entry(xproto_info.strings_errors, error_code);
+	}
 
+	if (extension)
+		*extension = best->name;
 	return get_strings_entry(best->static_info.strings_errors, error_code - best->first_error);
 }

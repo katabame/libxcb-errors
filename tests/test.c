@@ -41,23 +41,51 @@ static int check_request(xcb_errors_context_t *ctx, uint8_t opcode, const char *
 	return 0;
 }
 
-static int check_error(xcb_errors_context_t *ctx, uint8_t error, const char *expected)
+static int check_error(xcb_errors_context_t *ctx, uint8_t error,
+		const char *expected, const char *expected_extension)
 {
-	const char *actual = xcb_errors_get_name_for_error(ctx, error);
+	const char *actual, *actual_extension, *tmp;
+	actual = xcb_errors_get_name_for_error(ctx, error, &actual_extension);
+	if (actual_extension != expected_extension &&
+			strcmp(actual_extension, expected_extension) != 0) {
+		fprintf(stderr, "For error %d: Expected ext %s, got %s\n", error,
+				expected_extension, actual_extension);
+		return 1;
+	}
 	if (strcmp(actual, expected) != 0) {
 		fprintf(stderr, "For error %d: Expected %s, got %s\n", error,
 				expected, actual);
 		return 1;
 	}
+	tmp = xcb_errors_get_name_for_error(ctx, error, NULL);
+	if (tmp != actual) {
+		fprintf(stderr, "For error %d: Passing NULL made a difference: %s vs %s\n",
+				error, actual, tmp);
+		return 1;
+	}
 	return 0;
 }
 
-static int check_event(xcb_errors_context_t *ctx, uint8_t event, const char *expected)
+static int check_event(xcb_errors_context_t *ctx, uint8_t event,
+		const char *expected, const char *expected_extension)
 {
-	const char *actual = xcb_errors_get_name_for_event(ctx, event);
+	const char *actual, *actual_extension, *tmp;
+	actual = xcb_errors_get_name_for_event(ctx, event, &actual_extension);
+	if (actual_extension != expected_extension &&
+			strcmp(actual_extension, expected_extension) != 0) {
+		fprintf(stderr, "For event %d: Expected ext %s, got %s\n", event,
+				expected_extension, actual_extension);
+		return 1;
+	}
 	if (strcmp(actual, expected) != 0) {
 		fprintf(stderr, "For event %d: Expected %s, got %s\n", event,
 				expected, actual);
+		return 1;
+	}
+	tmp = xcb_errors_get_name_for_event(ctx, event, NULL);
+	if (tmp != actual) {
+		fprintf(stderr, "For event %d: Passing NULL made a difference: %s vs %s\n",
+				event, actual, tmp);
 		return 1;
 	}
 	return 0;
@@ -111,10 +139,10 @@ static int test_randr(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	}
 
 	err |= check_request(ctx, reply->major_opcode, "RandR");
-	err |= check_error(ctx, reply->first_error + 0, "BadOutput");
-	err |= check_error(ctx, reply->first_error + 3, "BadProvider");
-	err |= check_event(ctx, reply->first_event + 0, "ScreenChangeNotify");
-	err |= check_event(ctx, reply->first_event + 1, "Notify");
+	err |= check_error(ctx, reply->first_error + 0, "BadOutput", "RandR");
+	err |= check_error(ctx, reply->first_error + 3, "BadProvider", "RandR");
+	err |= check_event(ctx, reply->first_event + 0, "ScreenChangeNotify", "RandR");
+	err |= check_event(ctx, reply->first_event + 1, "Notify", "RandR");
 	err |= check_minor(ctx, reply->major_opcode, 0, "QueryVersion");
 	err |= check_minor(ctx, reply->major_opcode, 1, "Unknown (1)");
 	err |= check_minor(ctx, reply->major_opcode, 33, "GetProviderInfo");
@@ -151,15 +179,15 @@ static int test_valid_connection(void)
 	err |= check_minor(ctx, XCB_CREATE_WINDOW, 42, NULL);
 	err |= check_minor(ctx, XCB_CREATE_WINDOW, 0xffff, NULL);
 
-	err |= check_error(ctx, XCB_REQUEST, "Request");
-	err |= check_error(ctx, XCB_IMPLEMENTATION, "Implementation");
-	err |= check_error(ctx, 18, "Unknown (18)");
-	err |= check_error(ctx, 127, "Unknown (127)");
+	err |= check_error(ctx, XCB_REQUEST, "Request", NULL);
+	err |= check_error(ctx, XCB_IMPLEMENTATION, "Implementation", NULL);
+	err |= check_error(ctx, 18, "Unknown (18)", NULL);
+	err |= check_error(ctx, 127, "Unknown (127)", NULL);
 
-	err |= check_event(ctx, XCB_KEY_PRESS, "KeyPress");
-	err |= check_event(ctx, XCB_KEY_RELEASE, "KeyRelease");
-	err |= check_event(ctx, XCB_GE_GENERIC, "GeGeneric");
-	err |= check_event(ctx, 36, "Unknown (36)");
+	err |= check_event(ctx, XCB_KEY_PRESS, "KeyPress", NULL);
+	err |= check_event(ctx, XCB_KEY_RELEASE, "KeyRelease", NULL);
+	err |= check_event(ctx, XCB_GE_GENERIC, "GeGeneric", NULL);
+	err |= check_event(ctx, 36, "Unknown (36)", NULL);
 
 	err |= test_randr(c, ctx);
 
