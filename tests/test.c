@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SKIP 77
+
 static int check_request(xcb_errors_context_t *ctx, uint8_t opcode, const char *expected)
 {
 	const char *actual = xcb_errors_get_name_for_major_code(ctx, opcode);
@@ -105,7 +107,7 @@ static int test_randr(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	if (!reply || !reply->present) {
 		fprintf(stderr, "RANDR not supported by display\n");
 		free(reply);
-		return 1;
+		return SKIP;
 	}
 
 	err |= check_request(ctx, reply->major_opcode, "RandR");
@@ -134,7 +136,7 @@ static int test_valid_connection(void)
 	if (xcb_connection_has_error(c)) {
 		fprintf(stderr, "Failed to connect to X11 server (%d)\n",
 				xcb_connection_has_error(c));
-		return 1;
+		return SKIP;
 	}
 	if (xcb_errors_context_new(c, &ctx) < 0) {
 		fprintf(stderr, "Failed to initialize util-errors\n");
