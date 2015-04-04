@@ -91,10 +91,22 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 	return 0;
 }
 
+static int check_xge_event(xcb_errors_context_t *ctx, uint8_t major_code,
+		uint16_t event_type, const char *expected)
+{
+	const char *actual = xcb_errors_get_name_for_xge_event(ctx, major_code, event_type);
+	if (actual != expected && (actual == NULL || expected == NULL || strcmp(actual, expected) != 0)) {
+		fprintf(stderr, "For xge event (%d, %d): Expected %s, got %s\n",
+				major_code, event_type, expected, actual);
+		return 1;
+	}
+	return 0;
+}
+
 static int check_minor(xcb_errors_context_t *ctx, uint8_t major, uint16_t minor, const char *expected)
 {
 	const char *actual = xcb_errors_get_name_for_minor_code(ctx, major, minor);
-	if (actual != expected && strcmp(actual, expected) != 0) {
+	if (actual != expected && (actual == NULL || expected == NULL || strcmp(actual, expected) != 0)) {
 		fprintf(stderr, "For minor (%d, %d): Expected %s, got %s\n",
 				major, minor, expected, actual);
 		return 1;
@@ -154,6 +166,68 @@ static int test_randr(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	return err;
 }
 
+static int test_xinput(xcb_connection_t *c, xcb_errors_context_t *ctx)
+{
+	struct xcb_query_extension_reply_t *reply;
+	int err = 0;
+
+	reply = xcb_query_extension_reply(c,
+			xcb_query_extension(c, strlen("XInputExtension"), "XInputExtension"), NULL);
+	if (!reply || !reply->present) {
+		fprintf(stderr, "XInputExtension not supported by display\n");
+		free(reply);
+		return SKIP;
+	}
+
+	err |= check_request(ctx, reply->major_opcode, "Input");
+	err |= check_error(ctx, reply->first_error + 0, "Device", "Input");
+	err |= check_error(ctx, reply->first_error + 4, "Class", "Input");
+	err |= check_event(ctx, reply->first_event + 0, "DeviceValuator", "Input");
+	err |= check_event(ctx, reply->first_event + 16, "DevicePropertyNotify", "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 0, "Unknown (0)");
+	err |= check_xge_event(ctx, reply->major_opcode, 1, "DeviceChanged");
+	err |= check_xge_event(ctx, reply->major_opcode, 26, "BarrierLeave");
+	err |= check_xge_event(ctx, reply->major_opcode, 27, NULL);
+	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL);
+	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL);
+	err |= check_minor(ctx, reply->major_opcode, 0, "Unknown (0)");
+	err |= check_minor(ctx, reply->major_opcode, 1, "GetExtensionVersion");
+	err |= check_minor(ctx, reply->major_opcode, 47, "XIQueryVersion");
+	err |= check_minor(ctx, reply->major_opcode, 61, "XIBarrierReleasePointer");
+	err |= check_minor(ctx, reply->major_opcode, 62, NULL);
+	err |= check_minor(ctx, reply->major_opcode, 1337, NULL);
+	err |= check_minor(ctx, reply->major_opcode, 0xffff, NULL);
+
+	free(reply);
+	return err;
+}
+
+static int test_xkb(xcb_connection_t *c, xcb_errors_context_t *ctx)
+{
+	struct xcb_query_extension_reply_t *reply;
+	int err = 0;
+
+	reply = xcb_query_extension_reply(c,
+			xcb_query_extension(c, strlen("XKEYBOARD"), "XKEYBOARD"), NULL);
+	if (!reply || !reply->present) {
+		fprintf(stderr, "XKB not supported by display\n");
+		free(reply);
+		return SKIP;
+	}
+
+	err |= check_request(ctx, reply->major_opcode, "xkb");
+	err |= check_error(ctx, reply->first_error + 0, "Keyboard", "xkb");
+	err |= check_xge_event(ctx, reply->major_opcode, 0, "NewKeyboardNotify");
+	err |= check_xge_event(ctx, reply->major_opcode, 1, "MapNotify");
+	err |= check_xge_event(ctx, reply->major_opcode, 11, "ExtensionDeviceNotify");
+	err |= check_xge_event(ctx, reply->major_opcode, 12, NULL);
+	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL);
+	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL);
+
+	free(reply);
+	return err;
+}
+
 static int test_valid_connection(void)
 {
 	xcb_errors_context_t *ctx;
@@ -190,6 +264,8 @@ static int test_valid_connection(void)
 	err |= check_event(ctx, 36, "Unknown (36)", NULL);
 
 	err |= test_randr(c, ctx);
+	err |= test_xinput(c, ctx);
+	err |= test_xkb(c, ctx);
 
 	xcb_errors_context_free(ctx);
 	xcb_disconnect(c);
