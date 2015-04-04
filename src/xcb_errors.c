@@ -144,6 +144,20 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 	return get_strings_entry(info->static_info->strings_minor, minor_code);
 }
 
+const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
+		uint8_t major_code, uint16_t event_type)
+{
+	struct extension_info_t *info = ctx->extensions;
+
+	while (info && info->major_opcode != major_code)
+		info = info->next;
+
+	if (info == NULL || event_type >= info->static_info->num_xge_events)
+		return NULL;
+
+	return get_strings_entry(info->static_info->strings_xge_events, event_type);
+}
+
 const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		uint8_t event_code, const char **extension)
 {

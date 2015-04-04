@@ -102,6 +102,20 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		uint8_t event_code, const char **extension);
 
 /**
+ * Get the name corresponding to some XGE or XKB event. XKB does not actually
+ * use the X generic event extension, but implements its own event multiplexing.
+ * This function also handles XKB's xkbType events as a event_type.
+ *
+ * @param ctx An errors context, created with @ref xcb_errors_context_new ()
+ * @param major_code The extension's major code
+ * @param event_type The type of the event in that extension.
+ * @return A string allocated in static storage that contains a name for this
+ * event or NULL.
+ */
+const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
+		uint8_t major_code, uint16_t event_type);
+
+/**
  * Get the name corresponding to some error.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
