@@ -35,13 +35,14 @@ struct static_extension_info_t {
 	const char *strings_minor;
 	const char *strings_events;
 	const char *strings_errors;
+	const char *name;
 };
 
 extern const struct static_extension_info_t xproto_info;
 
 int register_extensions(xcb_errors_context_t *ctx, xcb_connection_t *conn);
 int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
-		xcb_query_extension_cookie_t cookie, const char *name,
+		xcb_query_extension_cookie_t cookie,
 		const struct static_extension_info_t static_info);
 
 #endif /* __ERRORS_H__ */

@@ -34,7 +34,6 @@ struct extension_info_t {
 	uint8_t major_opcode;
 	uint8_t first_event;
 	uint8_t first_error;
-	const char *name;
 };
 
 struct xcb_errors_context_t {
@@ -48,7 +47,7 @@ static const char *get_strings_entry(const char *strings, unsigned int index) {
 }
 
 int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
-		xcb_query_extension_cookie_t cookie, const char *name,
+		xcb_query_extension_cookie_t cookie,
 		const struct static_extension_info_t static_info)
 {
 	struct extension_info_t *info;
@@ -66,7 +65,6 @@ int register_extension(xcb_errors_context_t *ctx, xcb_connection_t *conn,
 		return -1;
 	}
 
-	info->name = name;
 	info->static_info = static_info;
 	info->major_opcode = reply->major_opcode;
 	info->first_event = reply->first_event;
@@ -128,7 +126,7 @@ const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
 	if (info == NULL)
 		return get_strings_entry(xproto_info.strings_minor, major_code);
 
-	return info->name;
+	return info->static_info.name;
 }
 
 const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
@@ -175,7 +173,7 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 	}
 
 	if (extension)
-		*extension = best->name;
+		*extension = best->static_info.name;
 	return get_strings_entry(best->static_info.strings_events, event_code - best->first_event);
 }
 
@@ -208,6 +206,6 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 	}
 
 	if (extension)
-		*extension = best->name;
+		*extension = best->static_info.name;
 	return get_strings_entry(best->static_info.strings_errors, error_code - best->first_error);
 }

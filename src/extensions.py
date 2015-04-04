@@ -105,6 +105,7 @@ def emit_module(module):
     format_strings("minor", module.requests_table)
     format_strings("events", module.events_table)
     format_strings("errors", module.errors_table)
+    output.write("\t.name = \"%s\",\n" % module.name)
     output.write("};\n\n")
 
 for module in modules:
@@ -118,7 +119,7 @@ output.write("\tint ret = 0;\n");
 for idx in range(len(modules)):
     output.write("\tcookies[%d] = xcb_query_extension(conn, strlen(\"%s\"), \"%s\");\n" % (idx, modules[idx].xname, modules[idx].xname));
 for idx in range(len(modules)):
-    output.write("\tret |= register_extension(ctx, conn, cookies[%d], \"%s\", extension_%s_info);\n" % (idx, modules[idx].name, modules[idx].name));
+    output.write("\tret |= register_extension(ctx, conn, cookies[%d], extension_%s_info);\n" % (idx, modules[idx].name));
 output.write("\treturn ret;\n");
 output.write("}\n");
 
