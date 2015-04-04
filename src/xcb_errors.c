@@ -28,8 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define IS_IN_RANGE(value, begin, length) ((value) >= (begin) && (value) < (begin) + (length))
-
 struct extension_info_t {
 	struct extension_info_t *next;
 	struct static_extension_info_t static_info;
@@ -151,29 +149,55 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		uint8_t event_code)
 {
-	struct extension_info_t *info = ctx->extensions;
+	struct extension_info_t *best = NULL;
+	struct extension_info_t *next = ctx->extensions;
 
-	while (info && (info->first_event == 0
-			|| !IS_IN_RANGE(event_code, info->first_event, info->static_info.num_events)))
-		info = info->next;
+	/* Find the extension with the largest first_event <= event_code. Thanks
+	 * to this we do the right thing if the server only supports an older
+	 * version of some extension which had less events.
+	 */
+	while (next) {
+		struct extension_info_t *current = next;
+		next = next->next;
 
-	if (info == NULL)
+		if (current->first_event > event_code)
+			continue;
+		if (best != NULL && best->first_event > current->first_event)
+			continue;
+		best = current;
+	}
+
+	if (best == NULL || best->first_event == 0)
+		/* Nothing found */
 		return get_strings_entry(xproto_info.strings_events, event_code);
 
-	return get_strings_entry(info->static_info.strings_events, event_code - info->first_event);
+	return get_strings_entry(best->static_info.strings_events, event_code - best->first_event);
 }
 
 const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		uint8_t error_code)
 {
-	struct extension_info_t *info = ctx->extensions;
+	struct extension_info_t *best = NULL;
+	struct extension_info_t *next = ctx->extensions;
 
-	while (info && (info->first_error == 0
-			|| !IS_IN_RANGE(error_code, info->first_error, info->static_info.num_errors)))
-		info = info->next;
+	/* Find the extension with the largest first_error <= error_code. Thanks
+	 * to this we do the right thing if the server only supports an older
+	 * version of some extension which had less events.
+	 */
+	while (next) {
+		struct extension_info_t *current = next;
+		next = next->next;
 
-	if (info == NULL)
+		if (current->first_error > error_code)
+			continue;
+		if (best != NULL && best->first_error > current->first_error)
+			continue;
+		best = current;
+	}
+
+	if (best == NULL || best->first_error == 0)
+		/* Nothing found */
 		return get_strings_entry(xproto_info.strings_errors, error_code);
 
-	return get_strings_entry(info->static_info.strings_errors, error_code - info->first_error);
+	return get_strings_entry(best->static_info.strings_errors, error_code - best->first_error);
 }
