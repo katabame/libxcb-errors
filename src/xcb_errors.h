@@ -55,14 +55,15 @@ typedef struct xcb_errors_context_t xcb_errors_context_t;
 int xcb_errors_context_new(xcb_connection_t *conn, xcb_errors_context_t **ctx);
 
 /**
- * Freed the @ref xcb_cursor_context_t.
+ * Free the @ref xcb_cursor_context_t.
  *
  * @param ctx The context to free.
  */
 void xcb_errors_context_free(xcb_errors_context_t *ctx);
 
 /**
- * Get the name corresponding to some major code.
+ * Get the name corresponding to some major code. This is either the name of
+ * some core request or the name of the extension that owns this major code.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param major_code The major code
@@ -74,7 +75,9 @@ const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
 		uint8_t major_code);
 
 /**
- * Get the name corresponding to some minor code or NULL.
+ * Get the name corresponding to some minor code. When the major_code does not
+ * belong to any extension or the minor_code is not assigned inside this
+ * extension, NULL is returned.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param major_code The major code under which to look up the minor code
@@ -87,7 +90,8 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 		uint16_t minor_code);
 
 /**
- * Get the name corresponding to some core event code.
+ * Get the name corresponding to some core event code. If possible, you should
+ * use @ref xcb_errors_get_name_for_xcb_event instead.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param event_code The response_type of an event.
@@ -105,6 +109,8 @@ const char *xcb_errors_get_name_for_core_event(xcb_errors_context_t *ctx,
  * Get the name corresponding to some XGE or XKB event. XKB does not actually
  * use the X generic event extension, but implements its own event multiplexing.
  * This function also handles XKB's xkbType events as a event_type.
+ *
+ * If possible, you should use @ref xcb_errors_get_name_for_xcb_event instead.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param major_code The extension's major code
