@@ -92,7 +92,7 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param event_code The response_type of an event.
  * @param extension Will be set to the name of the extension that generated this
- * event or NULL for unknown errors or core X11 errors. This argument may be
+ * event or NULL for unknown events or core X11 events. This argument may be
  * NULL.
  * @return A string allocated in static storage that contains a name for this
  * major code. This will never return NULL, but other functions in this library
