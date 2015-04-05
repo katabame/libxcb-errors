@@ -116,6 +116,20 @@ const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
 		uint8_t major_code, uint16_t event_type);
 
 /**
+ * Get a human printable name describing the type of some event.
+ *
+ * @param ctx An errors context, created with @ref xcb_errors_context_new ()
+ * @param event The event to investigate.
+ * @param extension Will be set to the name of the extension that generated this
+ * event or NULL for unknown events or core X11 events. This argument may be
+ * NULL.
+ * @return A string allocated in static storage that contains a name for this
+ * event or NULL for unknown event types.
+ */
+const char *xcb_errors_get_name_for_xcb_event(xcb_errors_context_t *ctx,
+		xcb_generic_event_t *event, const char **extension);
+
+/**
  * Get the name corresponding to some error.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()

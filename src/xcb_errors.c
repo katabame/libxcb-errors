@@ -223,3 +223,36 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		*extension = best->static_info->name;
 	return get_strings_entry(best->static_info->strings_errors, error_code - best->first_error);
 }
+
+const char *xcb_errors_get_name_for_xcb_event(xcb_errors_context_t *ctx,
+		xcb_generic_event_t *event, const char **extension)
+{
+	struct extension_info_t *xkb = ctx->extensions;
+
+	/* Find the xkb extension, if present */
+	while (xkb != NULL && strcmp(xkb->static_info->name, "xkb") != 0)
+		xkb = xkb->next;
+
+	if (event->response_type == XCB_GE_GENERIC) {
+		/* XGE offers extension's major code and event sub-type. */
+		xcb_ge_generic_event_t *ge = (void *) event;
+		if (extension)
+			*extension = xcb_errors_get_name_for_major_code(ctx,
+					ge->extension);
+		return xcb_errors_get_name_for_xge_event(ctx,
+				ge->extension, ge->event_type);
+	}
+	if (xkb != NULL && xkb->first_event != 0
+			&& event->response_type == xkb->first_event) {
+		/* There is no nice struct that defines the common fields for
+		 * XKB events, but the event type is always in the second byte.
+		 * In xcb_generic_event_t, this is the pad0 field.
+		 */
+		if (extension)
+			*extension = xkb->static_info->name;
+		return xcb_errors_get_name_for_xge_event(ctx,
+				xkb->major_opcode, event->pad0);
+	}
+	/* Generic case, decide only based on the response_type. */
+	return xcb_errors_get_name_for_event(ctx, event->response_type, extension);
+}

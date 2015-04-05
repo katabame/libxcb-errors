@@ -102,16 +102,88 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 	ret |= check_strings(actual, tmp,
 			"For event %d: Passing NULL made a difference: %s vs %s\n",
 			event, actual, tmp);
+
+	/* The wire_event we construct isn't a proper GE event */
+	if (event != XCB_GE_GENERIC) {
+		xcb_generic_event_t wire_event = {
+			.response_type = event
+		};
+
+		actual = xcb_errors_get_name_for_xcb_event(ctx, &wire_event, &actual_extension);
+		ret |= check_strings(expected_extension, actual_extension,
+				"For xcb wire event %d: Expected ext %s, got %s\n",
+				event, expected_extension, actual_extension);
+		ret |= check_strings(expected, actual,
+				"For xcb wire event %d: Expected %s, got %s\n",
+				event, expected, actual);
+
+		tmp = xcb_errors_get_name_for_xcb_event(ctx, &wire_event, NULL);
+		ret |= check_strings(actual, tmp,
+				"For xcb wire event %d: Passing NULL made a difference: %s vs %s\n",
+				event, actual, tmp);
+	}
 	return ret;
 }
 
 static int check_xge_event(xcb_errors_context_t *ctx, uint8_t major_code,
-		uint16_t event_type, const char *expected)
+		uint16_t event_type, const char *expected, const char *expected_extension)
 {
-	const char *actual = xcb_errors_get_name_for_xge_event(ctx, major_code, event_type);
-	return check_strings(expected, actual,
+	xcb_ge_generic_event_t wire_event = {
+		.response_type = XCB_GE_GENERIC,
+		.extension = major_code,
+		.event_type = event_type
+	};
+	const char *actual, *actual_extension, *tmp;
+	int ret = 0;
+
+	actual = xcb_errors_get_name_for_xge_event(ctx, major_code, event_type);
+	ret |= check_strings(expected, actual,
 			"For xge event (%d, %d): Expected %s, got %s\n",
 			major_code, event_type, expected, actual);
+
+	actual = xcb_errors_get_name_for_xcb_event(ctx, (void *) &wire_event, &actual_extension);
+	ret |= check_strings(expected_extension, actual_extension,
+			"For xcb xge wire event %d: Expected ext %s, got %s\n",
+			event_type, expected_extension, actual_extension);
+	ret |= check_strings(expected, actual,
+			"For xcb xge wire event %d: Expected %s, got %s\n",
+			event_type, expected, actual);
+
+	tmp = xcb_errors_get_name_for_xcb_event(ctx, (void *) &wire_event, NULL);
+	ret |= check_strings(actual, tmp,
+			"For xcb xge wire event %d: Passing NULL made a difference: %s vs %s\n",
+			event_type, actual, tmp);
+	return ret;
+}
+
+static int check_xkb_event(xcb_errors_context_t *ctx, uint8_t major_code, uint8_t first_event,
+		uint16_t event_type, const char *expected)
+{
+	xcb_generic_event_t wire_event = {
+		.response_type = first_event,
+		.pad0 = event_type
+	};
+	const char *actual, *actual_extension, *tmp;
+	int ret = 0;
+
+	actual = xcb_errors_get_name_for_xge_event(ctx, major_code, event_type);
+	ret |= check_strings(expected, actual,
+			"For xkb event (%d, %d): Expected %s, got %s\n",
+			major_code, event_type, expected, actual);
+
+	actual = xcb_errors_get_name_for_xcb_event(ctx, &wire_event, &actual_extension);
+	ret |= check_strings("xkb", actual_extension,
+			"For xcb xkb wire event %d: Expected ext xkb, got %s\n",
+			event_type, actual_extension);
+	ret |= check_strings(expected, actual,
+			"For xcb xkb wire event %d: Expected %s, got %s\n",
+			event_type, expected, actual);
+
+	tmp = xcb_errors_get_name_for_xcb_event(ctx, &wire_event, NULL);
+	ret |= check_strings(actual, tmp,
+			"For xcb xkb wire event %d: Passing NULL made a difference: %s vs %s\n",
+			event_type, actual, tmp);
+	return ret;
 }
 
 static int check_minor(xcb_errors_context_t *ctx, uint8_t major, uint16_t minor, const char *expected)
@@ -191,12 +263,12 @@ static int test_xinput(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	err |= check_error(ctx, reply->first_error + 4, "Class", "Input");
 	err |= check_event(ctx, reply->first_event + 0, "DeviceValuator", "Input");
 	err |= check_event(ctx, reply->first_event + 16, "DevicePropertyNotify", "Input");
-	err |= check_xge_event(ctx, reply->major_opcode, 0, "Unknown (0)");
-	err |= check_xge_event(ctx, reply->major_opcode, 1, "DeviceChanged");
-	err |= check_xge_event(ctx, reply->major_opcode, 26, "BarrierLeave");
-	err |= check_xge_event(ctx, reply->major_opcode, 27, NULL);
-	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL);
-	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL);
+	err |= check_xge_event(ctx, reply->major_opcode, 0, "Unknown (0)", "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 1, "DeviceChanged", "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 26, "BarrierLeave", "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 27, NULL, "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL, "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL, "Input");
 	err |= check_minor(ctx, reply->major_opcode, 0, "Unknown (0)");
 	err |= check_minor(ctx, reply->major_opcode, 1, "GetExtensionVersion");
 	err |= check_minor(ctx, reply->major_opcode, 47, "XIQueryVersion");
@@ -224,12 +296,12 @@ static int test_xkb(xcb_connection_t *c, xcb_errors_context_t *ctx)
 
 	err |= check_request(ctx, reply->major_opcode, "xkb");
 	err |= check_error(ctx, reply->first_error + 0, "Keyboard", "xkb");
-	err |= check_xge_event(ctx, reply->major_opcode, 0, "NewKeyboardNotify");
-	err |= check_xge_event(ctx, reply->major_opcode, 1, "MapNotify");
-	err |= check_xge_event(ctx, reply->major_opcode, 11, "ExtensionDeviceNotify");
-	err |= check_xge_event(ctx, reply->major_opcode, 12, NULL);
-	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL);
-	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL);
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 0, "NewKeyboardNotify");
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 1, "MapNotify");
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 11, "ExtensionDeviceNotify");
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 12, NULL);
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 1337, NULL);
+	err |= check_xkb_event(ctx, reply->major_opcode, reply->first_event, 0xffff, NULL);
 
 	free(reply);
 	return err;
