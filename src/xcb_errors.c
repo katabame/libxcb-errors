@@ -28,6 +28,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CHECK_CONTEXT(ctx) do { \
+	if ((ctx) == NULL) \
+		return "xcb-errors API misuse: context argument is NULL"; \
+} while (0)
+
 struct extension_info_t {
 	struct extension_info_t *next;
 	const struct static_extension_info_t *static_info;
@@ -118,8 +123,11 @@ void xcb_errors_context_free(xcb_errors_context_t *ctx)
 const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
 		uint8_t major_code)
 {
-	struct extension_info_t *info = ctx->extensions;
+	struct extension_info_t *info;
 
+	CHECK_CONTEXT(ctx);
+
+	info = ctx->extensions;
 	while (info && info->major_opcode != major_code)
 		info = info->next;
 
@@ -133,8 +141,11 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 		uint8_t major_code,
 		uint16_t minor_code)
 {
-	struct extension_info_t *info = ctx->extensions;
+	struct extension_info_t *info;
 
+	CHECK_CONTEXT(ctx);
+
+	info = ctx->extensions;
 	while (info && info->major_opcode != major_code)
 		info = info->next;
 
@@ -147,8 +158,11 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
 		uint8_t major_code, uint16_t event_type)
 {
-	struct extension_info_t *info = ctx->extensions;
+	struct extension_info_t *info;
 
+	CHECK_CONTEXT(ctx);
+
+	info = ctx->extensions;
 	while (info && info->major_opcode != major_code)
 		info = info->next;
 
@@ -162,12 +176,18 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 		uint8_t event_code, const char **extension)
 {
 	struct extension_info_t *best = NULL;
-	struct extension_info_t *next = ctx->extensions;
+	struct extension_info_t *next;
+
+	if (extension)
+		*extension = NULL;
+
+	CHECK_CONTEXT(ctx);
 
 	/* Find the extension with the largest first_event <= event_code. Thanks
 	 * to this we do the right thing if the server only supports an older
 	 * version of some extension which had less events.
 	 */
+	next = ctx->extensions;
 	while (next) {
 		struct extension_info_t *current = next;
 		next = next->next;
@@ -181,8 +201,6 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
 
 	if (best == NULL || best->first_event == 0) {
 		/* Nothing found */
-		if (extension)
-			*extension = NULL;
 		return get_strings_entry(xproto_info.strings_events, event_code);
 	}
 
@@ -195,12 +213,18 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		uint8_t error_code, const char **extension)
 {
 	struct extension_info_t *best = NULL;
-	struct extension_info_t *next = ctx->extensions;
+	struct extension_info_t *next;
+
+	if (extension)
+		*extension = NULL;
+
+	CHECK_CONTEXT(ctx);
 
 	/* Find the extension with the largest first_error <= error_code. Thanks
 	 * to this we do the right thing if the server only supports an older
 	 * version of some extension which had less events.
 	 */
+	next = ctx->extensions;
 	while (next) {
 		struct extension_info_t *current = next;
 		next = next->next;
@@ -214,8 +238,6 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 
 	if (best == NULL || best->first_error == 0) {
 		/* Nothing found */
-		if (extension)
-			*extension = NULL;
 		return get_strings_entry(xproto_info.strings_errors, error_code);
 	}
 
@@ -227,9 +249,15 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 const char *xcb_errors_get_name_for_xcb_event(xcb_errors_context_t *ctx,
 		xcb_generic_event_t *event, const char **extension)
 {
-	struct extension_info_t *xkb = ctx->extensions;
+	struct extension_info_t *xkb;
+
+	if (extension)
+		*extension = NULL;
+
+	CHECK_CONTEXT(ctx);
 
 	/* Find the xkb extension, if present */
+	xkb = ctx->extensions;
 	while (xkb != NULL && strcmp(xkb->static_info->name, "xkb") != 0)
 		xkb = xkb->next;
 

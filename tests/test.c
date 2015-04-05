@@ -351,10 +351,33 @@ static int test_valid_connection(void)
 	return err;
 }
 
+static int test_NULL_context(void)
+{
+	int err = 0;
+	const char *msg = "xcb-errors API misuse: context argument is NULL";
+
+	xcb_errors_context_free(NULL);
+	err |= check_strings(msg, xcb_errors_get_name_for_major_code(NULL, 0),
+			"xcb_errors_get_name_for_major_code(NULL, 0) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_minor_code(NULL, 0, 0),
+			"xcb_errors_get_name_for_minor_code(NULL, 0, 0) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_event(NULL, 0, NULL),
+			"xcb_errors_get_name_for_event(NULL, 0, NULL) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_xge_event(NULL, 0, 0),
+			"xcb_errors_get_name_for_xge_event(NULL, 0, 0) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_xcb_event(NULL, NULL, NULL),
+			"xcb_errors_get_name_for_xcb_event(NULL, NULL, NULL) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_error(NULL, 0, NULL),
+			"xcb_errors_get_name_for_xcb_error(NULL, 0, NULL) does not behave correctly");
+
+	return err;
+}
+
 int main(void)
 {
 	int err = 0;
 	err |= test_error_connection();
 	err |= test_valid_connection();
+	err |= test_NULL_context();
 	return err;
 }
