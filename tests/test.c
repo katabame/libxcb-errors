@@ -29,9 +29,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 203)
+#define ATTRIBUTE_PRINTF(x,y) __attribute__((__format__(__printf__,x,y)))
+#else
+#define ATTRIBUTE_PRINTF(x,y)
+#endif
+
 #define SKIP 77
 
-static int check_strings(const char *expected, const char *actual, const char *format, ...)
+static int check_strings(const char *expected, const char *actual,
+		const char *format, ...) ATTRIBUTE_PRINTF(3, 4);
+
+static int check_strings(const char *expected, const char *actual,
+		const char *format, ...)
 {
 	va_list ap;
 
