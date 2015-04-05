@@ -80,7 +80,7 @@ const char *xcb_errors_get_name_for_major_code(xcb_errors_context_t *ctx,
  * @param major_code The major code under which to look up the minor code
  * @param major_code The minor code
  * @return A string allocated in static storage that contains a name for this
- * major code or NULL.
+ * major code or NULL for unknown codes.
  */
 const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 		uint8_t major_code,
@@ -110,7 +110,7 @@ const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
  * @param major_code The extension's major code
  * @param event_type The type of the event in that extension.
  * @return A string allocated in static storage that contains a name for this
- * event or NULL.
+ * event or NULL for unknown event types.
  */
 const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
 		uint8_t major_code, uint16_t event_type);
