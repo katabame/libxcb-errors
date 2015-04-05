@@ -131,7 +131,7 @@ output.write("{\n");
 output.write("\txcb_query_extension_cookie_t cookies[%d];\n" % len(modules));
 output.write("\tint ret = 0;\n");
 for idx in range(len(modules)):
-    output.write("\tcookies[%d] = xcb_query_extension(conn, strlen(\"%s\"), \"%s\");\n" % (idx, modules[idx].xname, modules[idx].xname));
+    output.write("\tcookies[%d] = xcb_query_extension_unchecked(conn, strlen(\"%s\"), \"%s\");\n" % (idx, modules[idx].xname, modules[idx].xname));
 for idx in range(len(modules)):
     output.write("\tret |= register_extension(ctx, conn, cookies[%d], &extension_%s_info);\n" % (idx, modules[idx].name));
 output.write("\treturn ret;\n");
