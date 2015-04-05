@@ -87,7 +87,7 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
 		uint16_t minor_code);
 
 /**
- * Get the name corresponding to some event.
+ * Get the name corresponding to some core event code.
  *
  * @param ctx An errors context, created with @ref xcb_errors_context_new ()
  * @param event_code The response_type of an event.
@@ -98,7 +98,7 @@ const char *xcb_errors_get_name_for_minor_code(xcb_errors_context_t *ctx,
  * major code. This will never return NULL, but other functions in this library
  * may.
  */
-const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
+const char *xcb_errors_get_name_for_core_event(xcb_errors_context_t *ctx,
 		uint8_t event_code, const char **extension);
 
 /**

@@ -172,7 +172,7 @@ const char *xcb_errors_get_name_for_xge_event(xcb_errors_context_t *ctx,
 	return get_strings_entry(info->static_info->strings_xge_events, event_type);
 }
 
-const char *xcb_errors_get_name_for_event(xcb_errors_context_t *ctx,
+const char *xcb_errors_get_name_for_core_event(xcb_errors_context_t *ctx,
 		uint8_t event_code, const char **extension)
 {
 	struct extension_info_t *best = NULL;
@@ -282,5 +282,5 @@ const char *xcb_errors_get_name_for_xcb_event(xcb_errors_context_t *ctx,
 				xkb->major_opcode, event->pad0);
 	}
 	/* Generic case, decide only based on the response_type. */
-	return xcb_errors_get_name_for_event(ctx, event->response_type, extension);
+	return xcb_errors_get_name_for_core_event(ctx, event->response_type, extension);
 }

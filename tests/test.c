@@ -90,7 +90,7 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 	const char *actual, *actual_extension, *tmp;
 	int ret = 0;
 
-	actual = xcb_errors_get_name_for_event(ctx, event, &actual_extension);
+	actual = xcb_errors_get_name_for_core_event(ctx, event, &actual_extension);
 	ret |= check_strings(expected_extension, actual_extension,
 			"For event %d: Expected ext %s, got %s\n",
 			event, expected_extension, actual_extension);
@@ -98,7 +98,7 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 			"For event %d: Expected %s, got %s\n",
 			event, expected, actual);
 
-	tmp = xcb_errors_get_name_for_event(ctx, event, NULL);
+	tmp = xcb_errors_get_name_for_core_event(ctx, event, NULL);
 	ret |= check_strings(actual, tmp,
 			"For event %d: Passing NULL made a difference: %s vs %s\n",
 			event, actual, tmp);
@@ -361,8 +361,8 @@ static int test_NULL_context(void)
 			"xcb_errors_get_name_for_major_code(NULL, 0) does not behave correctly");
 	err |= check_strings(msg, xcb_errors_get_name_for_minor_code(NULL, 0, 0),
 			"xcb_errors_get_name_for_minor_code(NULL, 0, 0) does not behave correctly");
-	err |= check_strings(msg, xcb_errors_get_name_for_event(NULL, 0, NULL),
-			"xcb_errors_get_name_for_event(NULL, 0, NULL) does not behave correctly");
+	err |= check_strings(msg, xcb_errors_get_name_for_core_event(NULL, 0, NULL),
+			"xcb_errors_get_name_for_core_event(NULL, 0, NULL) does not behave correctly");
 	err |= check_strings(msg, xcb_errors_get_name_for_xge_event(NULL, 0, 0),
 			"xcb_errors_get_name_for_xge_event(NULL, 0, 0) does not behave correctly");
 	err |= check_strings(msg, xcb_errors_get_name_for_xcb_event(NULL, NULL, NULL),
