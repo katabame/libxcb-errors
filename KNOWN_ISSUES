@@ -1,8 +1,4 @@
-- XGE and XKB events are not handled correctly (Should another API for this be
-  added? Does it perhaps really make sense to have an API which gets an
-  xcb_generiv_event_t*)?
-- I'm not sure about xcb_errors_get_name_for_minor_code() being able to return
-  NULL
-- Should the extension's name be included in strings for that ext? More
-  generally, think about how this library can be used and if such usage would
-  result in "good" messages.
+- API docs with examples on how to use this
+- Does the name still seem correct? Figuring out event names turned out to be
+  more complicated than errors. Oh and we also handle requests...
+- Should releases come with pre-generated source?
