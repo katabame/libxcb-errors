@@ -103,6 +103,11 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 			"For event %d: Passing NULL made a difference: %s vs %s\n",
 			event, actual, tmp);
 
+	tmp = xcb_errors_get_name_for_core_event(ctx, event | 0x80, NULL);
+	ret |= check_strings(expected, tmp,
+			"For event %d|0x80: Expected %s, got %s\n",
+			event, expected, tmp);
+
 	/* The wire_event we construct isn't a proper GE event */
 	if (event != XCB_GE_GENERIC) {
 		xcb_generic_event_t wire_event = {
@@ -121,6 +126,12 @@ static int check_event(xcb_errors_context_t *ctx, uint8_t event,
 		ret |= check_strings(actual, tmp,
 				"For xcb wire event %d: Passing NULL made a difference: %s vs %s\n",
 				event, actual, tmp);
+
+		wire_event.response_type |= 0x80;
+		tmp = xcb_errors_get_name_for_xcb_event(ctx, &wire_event, NULL);
+		ret |= check_strings(expected, tmp,
+				"For xcb wire event %d|0x80: Expected %s, got %s\n",
+				event, expected, tmp);
 	}
 	return ret;
 }
