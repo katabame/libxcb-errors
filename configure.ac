@@ -24,6 +24,10 @@ XCBPROTO_XCBINCLUDEDIR=`$PKG_CONFIG --variable=xcbincludedir xcb-proto`
 AC_MSG_RESULT($XCBPROTO_XCBINCLUDEDIR)
 AC_SUBST(XCBPROTO_XCBINCLUDEDIR)
 
+# Find the xcb-proto version
+XCBPROTO_VERSION=`$PKG_CONFIG --modversion xcb-proto`
+AC_SUBST(XCBPROTO_VERSION)
+
 AC_OUTPUT([Makefile
 	xcb-errors.pc
 	])
