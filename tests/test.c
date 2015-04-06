@@ -347,11 +347,13 @@ static int test_valid_connection(void)
 	err |= check_error(ctx, XCB_IMPLEMENTATION, "Implementation", NULL);
 	err |= check_error(ctx, 18, "Unknown (18)", NULL);
 	err |= check_error(ctx, 127, "Unknown (127)", NULL);
+	err |= check_error(ctx, 0xff, "Unknown (255)", NULL);
 
 	err |= check_event(ctx, XCB_KEY_PRESS, "KeyPress", NULL);
 	err |= check_event(ctx, XCB_KEY_RELEASE, "KeyRelease", NULL);
 	err |= check_event(ctx, XCB_GE_GENERIC, "GeGeneric", NULL);
 	err |= check_event(ctx, 36, "Unknown (36)", NULL);
+	err |= check_event(ctx, 127, "Unknown (127)", NULL);
 
 	err |= test_randr(c, ctx);
 	err |= test_xinput(c, ctx);

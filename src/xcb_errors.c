@@ -200,7 +200,8 @@ const char *xcb_errors_get_name_for_core_event(xcb_errors_context_t *ctx,
 		best = current;
 	}
 
-	if (best == NULL || best->first_event == 0) {
+	if (best == NULL || best->first_event == 0
+			|| event_code - best->first_event >= best->static_info->num_events) {
 		/* Nothing found */
 		return get_strings_entry(xproto_info.strings_events, event_code);
 	}
@@ -237,7 +238,8 @@ const char *xcb_errors_get_name_for_error(xcb_errors_context_t *ctx,
 		best = current;
 	}
 
-	if (best == NULL || best->first_error == 0) {
+	if (best == NULL || best->first_error == 0
+			|| error_code - best->first_error >= best->static_info->num_errors) {
 		/* Nothing found */
 		return get_strings_entry(xproto_info.strings_errors, error_code);
 	}
