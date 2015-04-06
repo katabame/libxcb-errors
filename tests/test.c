@@ -256,6 +256,32 @@ static int test_randr(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	return err;
 }
 
+static int test_xfixes(xcb_connection_t *c, xcb_errors_context_t *ctx)
+{
+	struct xcb_query_extension_reply_t *reply;
+	int err = 0;
+
+	reply = xcb_query_extension_reply(c,
+			xcb_query_extension(c, strlen("XFIXES"), "XFIXES"), NULL);
+	if (!reply || !reply->present) {
+		fprintf(stderr, "XFIXES not supported by display\n");
+		free(reply);
+		return SKIP;
+	}
+
+	err |= check_request(ctx, reply->major_opcode, "XFixes");
+	err |= check_error(ctx, reply->first_error + 0, "BadRegion", "XFixes");
+	err |= check_event(ctx, reply->first_event + 0, "SelectionNotify", "XFixes");
+	err |= check_event(ctx, reply->first_event + 1, "CursorNotify", "XFixes");
+	err |= check_minor(ctx, reply->major_opcode, 0, "QueryVersion");
+	err |= check_minor(ctx, reply->major_opcode, 32, "DeletePointerBarrier");
+	err |= check_minor(ctx, reply->major_opcode, 1337, NULL);
+	err |= check_minor(ctx, reply->major_opcode, 0xffff, NULL);
+
+	free(reply);
+	return err;
+}
+
 static int test_xinput(xcb_connection_t *c, xcb_errors_context_t *ctx)
 {
 	struct xcb_query_extension_reply_t *reply;
@@ -359,6 +385,7 @@ static int test_valid_connection(void)
 	err |= test_randr(c, ctx);
 	err |= test_xinput(c, ctx);
 	err |= test_xkb(c, ctx);
+	err |= test_xfixes(c, ctx);
 
 	xcb_errors_context_free(ctx);
 	xcb_disconnect(c);
