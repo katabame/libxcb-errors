@@ -17,6 +17,8 @@ AC_TYPE_SSIZE_T
 XCB_UTIL_M4_WITH_INCLUDE_PATH
 XCB_UTIL_COMMON([1.4], [1.6])
 
+AM_PATH_PYTHON
+
 # Checks for xcb-proto's XML files, inspired from libxcb's configure.ac
 PKG_CHECK_MODULES(XCBPROTO, xcb-proto)
 AC_MSG_CHECKING(XCBPROTO_XCBINCLUDEDIR)
