@@ -12,7 +12,7 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-EXTRA_DIST = autogen.sh xcb-errors.pc.in src/errors.h src/extensions.py
+EXTRA_DIST = autogen.sh xcb-errors.pc.in src/errors.h src/extensions.py README.md
 
 lib_LTLIBRARIES = libxcb-errors.la
 
