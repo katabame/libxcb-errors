@@ -303,7 +303,8 @@ static int test_xinput(xcb_connection_t *c, xcb_errors_context_t *ctx)
 	err |= check_xge_event(ctx, reply->major_opcode, 0, "Unknown (0)", "Input");
 	err |= check_xge_event(ctx, reply->major_opcode, 1, "DeviceChanged", "Input");
 	err |= check_xge_event(ctx, reply->major_opcode, 26, "BarrierLeave", "Input");
-	err |= check_xge_event(ctx, reply->major_opcode, 27, NULL, "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 32, "GestureSwipeEnd", "Input");
+	err |= check_xge_event(ctx, reply->major_opcode, 33, NULL, "Input");
 	err |= check_xge_event(ctx, reply->major_opcode, 1337, NULL, "Input");
 	err |= check_xge_event(ctx, reply->major_opcode, 0xffff, NULL, "Input");
 	err |= check_minor(ctx, reply->major_opcode, 0, "Unknown (0)");
