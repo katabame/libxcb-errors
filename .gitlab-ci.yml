@@ -30,8 +30,8 @@ variables:
   # The tag should be updated each time the list of packages is updated.
   # Changing a tag forces the associated image to be rebuilt.
   # Note: the tag has no meaning, we use a date format purely for readability
-  FDO_DISTRIBUTION_TAG:  '2022-07-20.4'
-  FDO_DISTRIBUTION_PACKAGES:  'git gcc pkgconf autoconf automake libtool make xorg-util-macros doxygen graphviz python xorgproto libxcb xcb-proto'
+  FDO_DISTRIBUTION_TAG:  '2023-12-11.0'
+  FDO_DISTRIBUTION_PACKAGES:  'git gcc pkgconf autoconf automake libtool make xorg-util-macros doxygen graphviz python xorgproto libxcb xcb-proto xorg-server-xvfb'
   GIT_SUBMODULE_STRATEGY: normal
 
 #
@@ -93,6 +93,11 @@ build:
     - pushd _builddir > /dev/null
     - ../configure --disable-silent-rules
     - make
-    - make check
+    - xvfb-run --server-args='-noreset' make check
     - make distcheck
     - popd > /dev/null
+  artifacts:
+    when: on_failure
+    paths:
+      - _builddir/config.log
+      - _builddir/test-suite.log
